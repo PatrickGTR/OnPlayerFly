@@ -5,11 +5,5 @@ This include was created by pds2k12, thanks to [uL]Pottus for the idea to check 
 
 Callback
 ===========
-public OnPlayerFly( playerid)
+public OnPlayerFly( playerid 
 
-{
-  Ban(playerid);
-  
-  return true;
-  
-}
