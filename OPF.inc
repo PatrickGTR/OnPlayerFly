@@ -13,10 +13,7 @@ static
 public OnPlayerUpdate(playerid)
 {
     static  
-        Float:Positions[ 3 ], 
-        Float:Velocity[ 3 ], 
-        PlayerKeys[ 3 ]
-    ; 
+        Float:Positions[ 3 ], Float:Velocity[ 3 ], PlayerKeys[ 3 ]; 
 
     GetPlayerPos( playerid, Positions[ 0 ], Positions[ 1 ], Positions[ 2 ] ), GetPlayerVelocity(playerid, Velocity[ 0 ], Velocity[ 1 ], Velocity[ 2 ] ),
     GetPlayerKeys( playerid, PlayerKeys[ 0 ], PlayerKeys[ 1 ], PlayerKeys[ 2 ] );
@@ -64,28 +61,62 @@ static stock IsPlayerUsingFlyAnim( playerid )
     return false;
 }
 
-static stock IsPlayerInWater( playerid ) //Credits to Synchro for his coords function.
-{
-    static 
-        Float:fX, 
-        Float:fY, 
-        Float:fZ
-    ;
-    GetPlayerPos( playerid, fX, fY, fZ );
+/*
+    All functions below are created by Southclaw, thanks to him for sharing this useful function & array of SA water-area.
+    This function were taken from his (Scavenge and Survive) script, its free to use and its available on Github!
+*/
 
-    if((fX >= 2044.6 && fX <= 2192.984 && fY >= 1206.358 && fY <= 1376.552) && fZ < 0xA) return true;
-    else if((fX >= 2048.504 && fX <= 2185.174 && fY >= 1063.239 && fY <= 1202.49) && fZ < 0xA) return true;
-    else if((fX >= 2204.698 && fX <= 2204.698 && fY >= 1426.837 && fY <= 1430.705) && fZ < 0xA) return true;
-    else if((fX >= 2032.885 && fX <= 2114.887 && fY >= 1852.325 && fY <= 1991.575) && fZ < 0xC) return true;
-    else if((fX >= 2517.086 && fX <= 2606.897 && fY >= 2316.493 && fY <= 2420.93) && fZ < 0x16) return true;
-    else if((fX >= 2554.5996 && fX <= 2507.7683 && fY >= 1548.6178 && fY <= 1588.9154) && fZ < 0xF) return true;
-    else if((fX >= -2043.628 && fX <= -1973.561 && fY >= -980.9415 && fY <= -724.0283) && fZ < 0x20) return true;
-    else if((fX >= -2753.912 && fX <= -2665.071 && fY >= -522.3632 && fY <= -380.3444) && fZ < 0x05) return true;
-    else if((fX >= 1219.864 && fX <= 1292.118 && fY >= -2435.881 && fY <= -2325.344) && fZ < 0xF) return true;
-    else if((fX >= 1923.388 && fX <= 2010.854 && fY >= -1223.924 && fY <= -1168.656) && fZ < 0x16) return true;
-    else if((fX >= 1269.301 && fX <= 1314.935 && fY >= -837.0452 && fY <= -781.7769) && fZ < 0x5A) return true;
-    else if((fX >= 1087.3953 && fX <= 1102.3138 && fY >= -682.6734 && fY <= -663.0043) && fZ < 0x71) return true;
-    else if((fX >= 1268.6118 && fX <= 1291.8774 && fY >= -784.2910 && fY <= -764.6104) && fZ < 0x43D) return true;
-    else if(fZ < 0xF) return true;
-    else return false;
+static stock Float:Distance(Float:x1, Float:y1, Float:z1, Float:x2, Float:y2, Float:z2) return floatsqroot((((x1-x2)*(x1-x2))+((y1-y2)*(y1-y2))+((z1-z2)*(z1-z2))));
+static stock Float:Distance2D(Float:x1, Float:y1, Float:x2, Float:y2) return floatsqroot( ((x1-x2)*(x1-x2)) + ((y1-y2)*(y1-y2)) );
+
+static Float:water_places[20][4] =
+{
+    {30.0,                        2313.0,                -1417.0,        23.0},
+    {15.0,                        1280.0,                -773.0,                1083.0},
+    {25.0,                        2583.0,                2385.0,                15.0},
+    {20.0,                        225.0,                -1187.0,        74.0},
+    {50.0,                        1973.0,                -1198.0,        17.0},
+    {180.0,                        1937.0,         1589.0,                9.0},
+    {55.0,                        2142.0,                1285.0,         8.0},
+    {45.0,                        2150.0,                1132.0,                8.0},
+    {55.0,                        2089.0,                1915.0,                10.0},
+    {32.0,                        2531.0,                1567.0,                9.0},
+    {21.0,                        2582.0,                2385.0,                17.0},
+    {33.0,                        1768.0,                2853.0,                10.0},
+    {47.0,                        -2721.0,        -466.0,                3.0},
+    {210.0,                        -671.0,                -1898.0,        6.0},
+    {45.0,                        1240.0,                -2381.0,        9.0},
+    {50.0,                        1969.0,                -1200.0,        18.0},
+    {10.0,                        513.0,                -1105.0,        79.0},
+    {20.0,                        193.0,                -1230.0,        77.0},
+    {30.0,                        1094.0,                -672.0,                113.0},
+    {20.0,                        1278.0,                -805.0,                87.0}
+};
+
+static stock IsPlayerInWater(playerid)
+{
+    static Float:PosX, Float:PosY, Float:PosZ, i = -1;
+    GetPlayerPos(playerid, PosX, PosY, PosZ);
+
+    if(PosZ < 44.0)
+    {
+        if(Distance(PosX, PosY, PosZ, -965.0, 2438.0, 42.0) <= 700.0) return true;
+    }
+
+    while(++i < sizeof(water_places))
+    {
+        if(Distance2D(PosX, PosY, water_places[i][1], water_places[i][2]) <= water_places[i][0])
+        {
+            if(PosZ < water_places[i][3]) return true;
+        }
+        if(PosZ < 1.9)
+        {
+            if(Distance(PosX, PosY, PosZ, 618.4129, 863.3164, 1.0839) < 200.0) 
+            return false; 
+                else 
+            return true;
+        }
+    }
+    return false;
 }
+
